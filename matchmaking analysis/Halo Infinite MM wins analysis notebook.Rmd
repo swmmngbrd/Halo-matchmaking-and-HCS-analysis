@@ -1,0 +1,405 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+The purpose of this analysis was originally to fins out what final performance metrics predict wins more than others, what match stats move the needle the most. I understand the underlying mechanisms of generating those stats are much more iluminating for the purpose of acquiring wins, but for that kind of analysis in-match event logs would be required, which unfortunately is not available in Halo Infinite (not at scale any way, I've seen projects to generate heatmap data for a single match, but scaling this to gather a large sample is outside my competence, for now at least). This analysis gathers finals match data from Ranked Arena matchmaking, analysis of HCS matches is done in a seprate notebook.
+
+For analysis, I have focused on team performance, for two reasons. Firstly, the matchmaking stats are retrieved via the Halo Infinite API, which technically accesses the match record via a single player/gamertag, that is it retrieves the numbers for gamertag "accessing" the API, so for a single retriaval no stats for other individual players are available. The workaround would be to access the match_id records from "perspective" of each player in the lobby and then join individual performances, this will likely be done in the future, since I wish to analyse how much good or poor performance of team mates affects individual stats. Alas, for now the data required is not available. Secondly, analysing strictly at the aggregate team level is sufficient if we assume that individual peformances are strictly upstream, that is there are no edges from individual performance stats to win-nerating processes downstream from team performance.
+
+[PUT DAG ILLUSTRATION HERE]
+
+Naturally, testing if this DAG structure actually holds up would be the next step of analysis. I will come back to this once this individual performance data is retrieved. But for now for the strict objective of analysing which performance metrics predict wins best, I assume this much simpler DAG structure which allows to aggregate at the team level and move on.
+
+```{r}
+require(tidyverse)
+filter <- dplyr::filter
+
+# generating main data frame
+
+# get list of files in dir
+files <- list.files(
+  pattern = "Halo Query",
+  full.names = TRUE
+  )
+
+# match records are from perspective of different players, so must generate aggregate df with team stats and outcomes and match info
+# import all csv's in dir to a single list of dataframes, assign names
+dfs_all_list <- lapply(files, read.csv)
+names(dfs_all_list) <- tools::file_path_sans_ext(basename(files))
+
+# reassign column names to individual dataframes in dfs because column names in original csv's are weird
+# proper_col_names variable is manually generated from csv with proper column names (some match csv's had poorly formatted columns, so I manually checked for csv with proper column names)
+# then i wrote them into a txt than can be read manually
+proper_col_names <- readLines("proper_col_names.txt")
+for (i in seq(1:length(dfs_all_list))) {names(dfs_all_list[[i]]) <- proper_col_names}
+     
+# generate a single ANCESTOR dataframe by combining rows
+df_all_matches <- bind_rows(dfs_all_list)
+
+# remove match duplicates and generate new main working df
+df_wip <- distinct(df_all_matches,`MATCH ID`,.keep_all = T)
+```
+
+```{r}
+# cleaning up df_wip - main objective for meaningful analysis was dealing with mathes that end early due to players leaving prematurely. For example, when a player lags out a team that was ahead in score, the respective team gets a loss even though ingame performance would have predicted otherwise, so this case is pathologic to performance predicting outcomes, so in this specific case it makes sense to impute such match records. since the match data doesn't carry any info actual lagouts, then we are left with attempting to infer when a match fits as a candidate for when final match outcome was affected by lagouts or similar factors( e.g. players idling). Thus, I filter out matches when ingame score and official outcome disagree, when match duration is too short and max score condition is unsatisfied, etc. These filter outs are game type specific since they have different time and scoring structures.
+
+# also, I filtered out matches where in game performance, specifically kills/deaths were clear outlier, again based on own game understanding. From own extensive experience, anything above 2.0 (to be sure, conservatively 3.0) or below 0.5 (or 0.33) is a clear sign of an uncompetitive match, when one team is essentially not trying. Now, these are chosen as candidates for imputation, since the objective of analysis is determining which performance stats best predict outcomes in competitive matches, when we assume participants actively try to win.
+
+# generate duration columns, relocate
+require(lubridate)
+require(hms)
+df_wip <- df_wip %>%
+  mutate(
+    duration_hms = as_hms(
+      as.numeric(sub(":.*", "", DURATION)) * 60 +
+        as.numeric(sub(".*:", "", DURATION))
+    )
+  ) %>%
+  mutate(
+    "duration_in_secs" = as.duration(duration_hms) %>% as.numeric(),
+    "duration_in_mins" = as.duration(duration_hms) %>% as.numeric(units="mins"),
+    "duration_drtn" = as.duration(duration_hms)
+  ) %>%
+  relocate(c("duration_hms","duration_drtn","duration_in_secs","duration_in_mins"),
+           .after=DURATION)
+
+# filter for Ranked Arena game types
+game_variant = list(
+  "Ranked:CTF 3 Captures", "Ranked:CTF 5 Captures", "Ranked:King of the Hill",
+  "Ranked:Oddball","Ranked:Slayer","Ranked:Strongholds")
+df_wip <- df_wip %>% filter(`GAME VARIANT` %in% game_variant)
+
+# manually defining gamemode specific max score thresholds
+game_variant_max_score <- list(3,5,4,200,50,250)
+names(game_variant_max_score) <- game_variant
+
+# generate outcome_score_based def. as outcome suggested by final team scores
+df_wip <- df_wip %>%
+  mutate(outcome_score_based = case_when(
+    `SCORES: PLAYER TEAM` < `SCORES: ENEMY TEAM` ~ "Loss", .default = "Win"
+  ))
+df_wip <- df_wip %>% relocate(outcome_score_based,.after=OUTCOME)
+
+df_wip <- df_wip %>% 
+  mutate(outcome_mismatch = !(OUTCOME==outcome_score_based)) %>% 
+  relocate(outcome_mismatch, .after=outcome_score_based)
+
+df_wip <- df_wip %>% 
+  mutate(
+    score_game_variant_max = game_variant_max_score[`GAME VARIANT`],
+    score_not_max = pmax(
+      `SCORES: PLAYER TEAM`,`SCORES: ENEMY TEAM`) < score_game_variant_max,
+    ) %>%
+  relocate(c(score_game_variant_max, score_not_max), .after=`SCORES: ENEMY TEAM`)
+
+df_wip <- df_wip %>% mutate(
+  did_not_finish_match_candidate = case_when(
+    `GAME VARIANT CATEGORY` == "Slayer" & score_not_max ~ T,
+    `GAME VARIANT CATEGORY` == "Strongholds" & score_not_max ~ T,
+    `GAME VARIANT CATEGORY` == "Capture the Flag" & outcome_mismatch ~ T,
+    `GAME VARIANT CATEGORY` == "Oddball" & score_not_max & 
+      (outcome_mismatch == T | (duration_in_mins < 6)) ~ T,
+    `GAME VARIANT CATEGORY` == "King of The Hill" & score_not_max &
+      (outcome_mismatch == T | (duration_in_mins < 6)) ~ T,
+    .default = F
+  )
+) %>%
+  relocate(did_not_finish_match_candidate, .after=OUTCOME)
+
+df_wip <- df_wip %>% filter(!did_not_finish_match_candidate)
+
+df_wip <- df_wip %>% filter_out(pmax(`TEAM STATS: KILLS: COUNT`,`TEAM STATS: DEATHS: COUNT`) <12)
+df_wip <- df_wip %>% filter_out(`TEAM STATS: KD` < .5)
+df_wip <- df_wip %>% filter_out(`TEAM STATS: KD` > 2)
+
+df_wip <- df_wip %>% filter(PLAYLIST == "Ranked Arena")
+df_wip <- df_wip %>% filter(grepl('Ranked',MAP))
+
+df_wip <- df_wip %>% select(!contains(c("PLAYER", "CSR", "GAMERTAG", "SKILL", "COUNTERFACTUALS")))
+
+df_main <- df_wip %>% select(!c("score_not_max","score_game_variant_max","did_not_finish_match_candidate"))
+
+df_main <- df_main %>%
+  mutate(
+    "OUTCOME binary" = as.numeric((OUTCOME == "Win")),
+    .after = OUTCOME
+  )
+
+names(df_main) <- make.names(names(df_main))
+
+rm(df_all_matches)
+rm(dfs_all_list)
+```
+
+First question is how much do kills matter for wins? Formulated more rigoruosly its - how well does size of team kill/death difference predict win outcome? Now, obviously in Slayer team kill/death > 0 predicts a win with p=1 and kill/death < 0 predicts a win with p=0, so for now, let's drop slayer from analysis and focus on how much kills matter in objective game types.
+
+```{r}
+require(mgcv)
+```
+```{r}
+binomial_fit_kd_simple <- gam(
+  OUTCOME.binary ~ s(TEAM.STATS..KD, bs="cr"),
+  family = "binomial",
+  data = df_main %>% 
+    filter(!GAME.VARIANT.CATEGORY == "Slayer")
+)
+```
+```{r}
+summary(binomial_fit_kd_simple)
+```
+```{r}
+require(ggplot2)
+require(ggthemes)
+df_main_slayer <- df_main %>% filter(GAME.VARIANT.CATEGORY == "Slayer")
+df_main_no_slayer <- df_main %>% filter(!GAME.VARIANT.CATEGORY == "Slayer")
+
+grid <- data.frame(
+  TEAM.STATS..KD = seq(quantile(df_main_no_slayer$TEAM.STATS..KD,.25),quantile(df_main_no_slayer$TEAM.STATS..KD,.75),length.out=100)
+)
+
+grid <- cbind(grid,predict(binomial_fit_kd_simple,newdata = grid, type="link", se.fit = T))
+grid$prob_fit_expectation <- plogis(grid$fit)
+grid$prob_fit_higher <- grid$prob_fit_expectation + 1.96*grid$se.fit
+grid$prob_fit_lower <- grid$prob_fit_expectation - 1.96*grid$se.fit
+
+ggplot(grid) +
+  geom_line(aes(x = TEAM.STATS..KD, y = prob_fit_expectation)) +
+  geom_line(aes(x = TEAM.STATS..KD, y = prob_fit_higher), linetype = "dashed") +
+  geom_line(aes(x = TEAM.STATS..KD, y = prob_fit_lower), linetype = "dashed") +
+  geom_hline(yintercept = 0.5, color = "pink") + 
+  labs( x = "Team KD", y = 'E{P="Win"" | not Slayer} with 95% confidence interval') +
+  theme_minimal()
+```
+
+```{r}
+binomial_fit_kd_assists <- gam(
+  OUTCOME.binary ~ s(TEAM.STATS..KD, bs="cr") + s(TEAM.STATS..ASSISTS..PER.MIN., bs="cr"),
+  family = "binomial",
+  data = df_main %>% 
+    filter(!GAME.VARIANT.CATEGORY == "Slayer")
+)
+summary(binomial_fit_kd_assists)
+```
+```{r}
+anova.gam(binomial_fit_kd_assists, binomial_fit_kd_simple)
+```
+
+Interestingly, adding team assists per min (which would be one of the first metrics to come mind as a metric of team work efficiency) to specification is not significant under the chi sq difference in deviance test, i.e. assist frequency does not predict outcome better enough over noise, at least once we "condition" on KD.
+
+Now to add another robust (from own understanding of the game) metric for team efficiency - difference in damage dealt per min and damage taken per min. Canonically, this is certainly the second most referenced metric in individual performance behind KD.
+```{r}
+df_main <- df_main %>% mutate(
+  team.damage.dealt.taken.diff = TEAM.STATS..DAMAGE.DEALT..PER.MIN. - TEAM.STATS..DAMAGE.TAKEN..PER.MIN.,
+  .after = TEAM.STATS..DAMAGE.TAKEN..PER.MIN.
+)
+binomial_fit_kd_assists_damagediff <- gam(
+  OUTCOME.binary ~ s(TEAM.STATS..KD, bs="cr") + s(TEAM.STATS..ASSISTS..PER.MIN., bs="cr") + s(team.damage.dealt.taken.diff, bs="cr"),
+  family = "binomial",
+  data = df_main %>% 
+    filter(!GAME.VARIANT.CATEGORY == "Slayer")
+)
+summary(binomial_fit_kd_assists_damagediff)
+```
+```{r}
+anova.gam(binomial_fit_kd_assists_damagediff,binomial_fit_kd_assists)
+```
+
+From both test, it's clear "damage value added" is a significant predictor of positive outcomes, even with conditioning on KD. Now to check, the practical significance of damage value added:
+```{r, fig.width=10, fig.height=10}
+plot(binomial_fit_kd_assists_damagediff, pages=1)
+```
+Interestingly, as the analysis of deviance suggested it clear from the plot, assists smoother is not statistically different from zero at any value.
+
+The functional values of damage smoother (3rd plot) are much more modest than KD smoother at same respective quantile values. On the positive side, it is clear a significant team damage advantage matters for win probability, however it is also clear that potential advantage is significantly exceed by the negative effect of KD < 1. It begs the question of the distribution of KD wrt damage value added.
+
+```{r fig.width=10, fig.height=10}
+require(ggthemes)
+ggplot(data = df_main %>% filter(!GAME.VARIANT.CATEGORY == "Slayer")) +
+  geom_point(aes(x = team.damage.dealt.taken.diff, y = TEAM.STATS..KD), alpha = .1) +
+  annotate(
+    "text",
+    x = Inf,
+    y=Inf,
+    label = paste0(
+      cor(df_main$team.damage.dealt.taken.diff,df_main$TEAM.STATS..KD) %>% signif(2)),
+    hjust = 20,
+    vjust =8)
+```
+
+```{r}
+require(ggthemes)
+ggplot(data = df_main %>% filter(!GAME.VARIANT.CATEGORY == "Slayer") %>% filter(TEAM.STATS..KD > .9 & TEAM.STATS..KD < 1 / .9)) +
+  geom_point(aes(x = team.damage.dealt.taken.diff, y = TEAM.STATS..KD), alpha = .15)
+```
+Strongly, positively correlated, yet there is enough variation in damage diff at a given value of KD, especially around 1.0. We fit a gam with interaction between KD and damage diff and see if benefit from higher damage diff when KD is around 1.0 is even practically significant.
+
+```{r}
+binomial_fit_kd_damagediff_interaction <- gam(
+  OUTCOME.binary ~ s(TEAM.STATS..KD, team.damage.dealt.taken.diff),
+  family = "binomial",
+  data = df_main %>% 
+    filter(!GAME.VARIANT.CATEGORY == "Slayer")
+)
+
+summary(binomial_fit_kd_damagediff_interaction)
+```
+
+We can visualize:
+```{r, fig.width= 30, fig.width=30, out.width="100%"}
+require(lattice)
+
+df_main_slayer <- df_main %>% filter(GAME.VARIANT.CATEGORY == "Slayer")
+df_main_no_slayer <- df_main %>% filter(!GAME.VARIANT.CATEGORY == "Slayer")
+
+grid <- expand.grid(
+  team.damage.dealt.taken.diff = seq(min(df_main_no_slayer$team.damage.dealt.taken.diff),max(df_main_no_slayer$team.damage.dealt.taken.diff),length.out = 200),
+  TEAM.STATS..KD = seq(min(df_main_no_slayer$TEAM.STATS..KD),max(df_main_no_slayer$TEAM.STATS..KD),length.out = 200)
+)
+grid$smoother_hat <- predict(binomial_fit_kd_damagediff_interaction, newdata=grid)
+
+wireframe(
+  smoother_hat ~ team.damage.dealt.taken.diff * TEAM.STATS..KD,
+  data = grid,
+  drape = T,
+  xlab = "Damage diff",
+  ylab = "KD",
+  zlab = "smoother prediction",
+  screen = list(z = -40, x = -60),
+  scales = list(
+    arrows = F
+  )
+  
+)  
+```
+```{r , fig.height=30, fig.width=30, out.width="100%"} 
+grid <- expand.grid(
+  team.damage.dealt.taken.diff = seq(quantile(df_main_no_slayer$team.damage.dealt.taken.diff,probs =  .25),quantile(df_main_no_slayer$team.damage.dealt.taken.diff, probs = .75),length.out = 100),
+  TEAM.STATS..KD = seq(quantile(df_main_no_slayer$TEAM.STATS..KD, probs = .25),quantile(df_main_no_slayer$TEAM.STATS..KD, probs = .75),length.out = 100)
+)
+grid$smoother_hat <- predict(binomial_fit_kd_damagediff_interaction, newdata=grid)
+
+wireframe(
+  smoother_hat ~ team.damage.dealt.taken.diff * TEAM.STATS..KD,
+  data = grid,
+  drape = T,
+  xlab = "Damage diff",
+  ylab = "KD",
+  zlab = "smoother prediction",
+  screen = list(z = -40, x = -60),
+  scales = list(
+    arrows = F
+  )
+  
+)  
+```
+
+```{r} 
+grid <- expand.grid(
+  team.damage.dealt.taken.diff = seq(quantile(df_main_no_slayer$team.damage.dealt.taken.diff,probs =  .25),quantile(df_main_no_slayer$team.damage.dealt.taken.diff, probs = .75),length.out = 100),
+  TEAM.STATS..KD = seq(.95,1.05,.02)
+)
+grid_predict<- predict(binomial_fit_kd_damagediff_interaction, newdata=grid, type="link", se.fit=T)
+
+grid <- data.frame(grid, grid_predict)
+
+grid$fit_higher <- grid$fit + 1.96*grid$se.fit
+grid$fit_lower <- grid$fit - 1.96*grid$se.fit
+
+grid$prob_fit_expectation <- plogis(grid$fit)
+grid$prob_fit_higher <- plogis(grid$fit_higher)
+grid$prob_fit_lower <- plogis(grid$fit_lower)
+
+ggplot(grid) +
+  geom_line(aes(x= team.damage.dealt.taken.diff, y= prob_fit_expectation)) +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_higher), linetype = "dashed") +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_lower), linetype = "dashed") +
+  geom_hline(yintercept = 0.5, color="pink") +
+  facet_wrap(~ TEAM.STATS..KD) +
+  labs( x = "Team Damage Dealt - Taken per min, faceted by KD", y = 'E{P="Win" | not Slayer} with 95% confidence interval') +
+  theme_clean()
+```
+Given that ingame spartan's have 140 shield points, 100 team damage difference per minute is significant if we keep in mind, most damage is traded about one for between players most of the time, but a small proportion of engagements results in severely uneven damage exchanges, so further insight would be gathered if we had access to the distribution of damage done during a match. But for now the lines tell us there is clear evidence, even if KD is very close to 1, team damage difference can serve as a meaningful metric for if the team systematically gained or gave up an advantage over the course of the match. Interestingly, looking at more tightly faceted plots below, at KD very close to 1.025, which is where simple regression predicts even win probability, about 5% win probability is foregone if teams per min damage diff is about -100 points, which corresponds to about 25th percentile.
+
+```{r } 
+grid <- expand.grid(
+  team.damage.dealt.taken.diff = seq(quantile(df_main_no_slayer$team.damage.dealt.taken.diff,probs =  .25),quantile(df_main_no_slayer$team.damage.dealt.taken.diff, probs = .75),length.out = 100),
+  TEAM.STATS..KD = seq(1.015,1.04,.005)
+)
+grid_predict<- predict(binomial_fit_kd_damagediff_interaction, newdata=grid, type="link", se.fit=T)
+
+grid <- data.frame(grid, grid_predict)
+
+grid$fit_higher <- grid$fit + 1.96*grid$se.fit
+grid$fit_lower <- grid$fit - 1.96*grid$se.fit
+
+grid$prob_fit_expectation <- plogis(grid$fit)
+grid$prob_fit_higher <- plogis(grid$fit_higher)
+grid$prob_fit_lower <- plogis(grid$fit_lower)
+
+ggplot(grid) +
+  geom_line(aes(x= team.damage.dealt.taken.diff, y= prob_fit_expectation)) +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_higher), linetype = "dashed") +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_lower), linetype = "dashed") +
+  geom_hline(yintercept = 0.5, color="pink") +
+  facet_wrap(~ TEAM.STATS..KD) +
+  labs( x = "Team Damage Dealt - Taken per min, faceted by KD", y = 'E{P="Win"" | not Slayer} with 95% confidence interval') +
+  theme_clean()
+```
+
+Now, to come back to Slayer game type and analyse, how well secondary performance metrics predict a team kill/death differential.
+```{r}
+df_main <- df_main %>% 
+  mutate(
+    team.stats..accuracy.as.numeric = gsub(
+      pattern = "%",
+      replacement = "",
+      TEAM.STATS..ACCURACY)%>% as.numeric %>% sapply(function(a){a/100}),
+    .after = TEAM.STATS..ACCURACY
+    )
+binomial_fit_slayer_large_spec <- gam(
+  OUTCOME.binary ~ s(TEAM.STATS..ASSISTS..PER.MIN., bs="cr") + s(team.damage.dealt.taken.diff, bs="cr") + s(team.stats..accuracy.as.numeric, bs="cr") + s(TEAM.STATS..CALLOUT.ASSISTS, bs="cr"),
+  family = "binomial",
+  data = df_main %>% 
+    filter(GAME.VARIANT.CATEGORY == "Slayer")
+)
+summary(binomial_fit_slayer_large_spec)
+```
+The predictors are significant, however overall the regression does not fit the data as well as one would hope, suggesting unaccounted variables.
+
+To visualize, how divorced KD can be from team damage difference:
+```{r}
+df_main_slayer <- df_main %>% filter(GAME.VARIANT.CATEGORY == "Slayer")
+df_main_no_slayer <- df_main %>% filter(!GAME.VARIANT.CATEGORY == "Slayer")
+
+grid <- data.frame(
+  team.damage.dealt.taken.diff = seq(quantile(df_main_slayer$team.damage.dealt.taken.diff,probs =  .25),quantile(df_main_slayer$team.damage.dealt.taken.diff, probs = .75),length.out = 100),
+  TEAM.STATS..ASSISTS..PER.MIN. = median(df_main_slayer$TEAM.STATS..ASSISTS..PER.MIN.),
+  team.stats..accuracy.as.numeric = median(df_main_slayer$team.stats..accuracy.as.numeric),
+  TEAM.STATS..CALLOUT.ASSISTS = median(df_main_slayer$TEAM.STATS..CALLOUT.ASSISTS)
+)
+grid_predict<- predict(binomial_fit_slayer_large_spec, newdata=grid, type="link", se.fit=T)
+
+grid <- data.frame(grid, grid_predict)
+
+grid$fit_higher <- grid$fit + 1.96*grid$se.fit
+grid$fit_lower <- grid$fit - 1.96*grid$se.fit
+
+grid$prob_fit_expectation <- plogis(grid$fit)
+grid$prob_fit_higher <- plogis(grid$fit_higher)
+grid$prob_fit_lower <- plogis(grid$fit_lower)
+
+ggplot(grid) +
+  geom_line(aes(x= team.damage.dealt.taken.diff, y= prob_fit_expectation)) +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_higher), linetype = "dashed") +
+  geom_line(aes(x=team.damage.dealt.taken.diff, y = prob_fit_lower), linetype = "dashed") +
+  geom_hline(yintercept = 0.5, color="pink") +
+  labs(x= "Team Damage Dealt - Taken per min", y = 'E{P="Win"|Slayer}') +
+  theme_clean()
+
+```
+

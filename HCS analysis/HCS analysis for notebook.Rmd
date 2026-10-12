@@ -1,0 +1,134 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r echo=FALSE}
+require(mgcv)
+```
+```{r}
+binomial_fit_kd_simple <- gam(
+  is_win_binary ~ s(kd, bs="cr"),
+  family = "binomial",
+  data = binomial_fit_data_completedispersion_noslayer,
+)
+```
+```{r}
+summary(binomial_fit_kd_simple)
+```
+```{r}
+plot(binomial_fit_kd_simple)
+```
+
+```{r}
+binomial_fit_kd_killdeathdispersion <- gam(
+  is_win_binary ~ s(kd, team_kills_minus_deaths_dispersion),
+  family = "binomial",
+  data = binomial_fit_data_completedispersion_noslayer,
+)
+```
+```{r}
+summary(binomial_fit_kd_killdeathdispersion)
+```
+
+```{r}
+binomial_fit_data_completedispersion_noslayer <- binomial_fit_data_completedispersion_noslayer %>% mutate(
+  damage_difference_per_min = (dmg - dmg_taken) / match_duration_in_mins,
+  assists_per_min = assists / match_duration_in_mins
+)
+
+binomial_fit_full_spec <- gam(
+  is_win_binary ~ s(kd, team_kills_minus_deaths_dispersion, damage_difference_per_min) + s(assists_per_min, bs="cr"),
+  family = "binomial",
+  data = binomial_fit_data_completedispersion_noslayer
+)
+```
+```{r}
+summary(binomial_fit_full_spec)
+```
+```{r}
+binomial_fit_kd_assists <- gam(
+  is_win_binary ~ s(kd, bs="cr") + s(assists_per_min, bs="cr"),
+  family = "binomial",
+  data = binomial_fit_data_completedispersion_noslayer
+)
+```
+```{r}
+summary(binomial_fit_kd_assists)
+```
+```{r}
+binomial_fit_data_completedispersion_noslayer %>% mutate(
+    assists_per_min_category = case_when(
+      assists_per_min > 4.5 ~ "outlier?",
+      .default = "standard"
+    )
+) %>% summarise(n = n(), .by = assists_per_min_category) %>%
+  mutate(proportion = n / sum(n))
+```
+It seems again KD is the main sole, best aggregate performance predictor of wins, that is around KD = 1 win probability is predicted to be around 0.5. Let's check if the predicted coin toss outcome is illustrated by the distribution of final score difference between the two teams. Strongholds and Oddball have numeric scores, while KOTH and CTF have "very" discrete outcomes, so visualisation types ought to be different.
+
+```{r}
+# creating df to add final match scores to kd, match_id, etc.
+
+matches_team_score_kd <- binomial_fit_data_completedispersion_noslayer %>%
+  select(match_id, series_id, is_win_binary, kd) %>%
+  left_join(
+    matches %>% mutate( abs_score_diff = abs(team_1_score - team_2_score) ) %>%
+      select(match_id, series_id, game_variant, abs_score_diff),
+    by = c("match_id","series_id")
+)
+
+matches_team_score_kd <- matches_team_score_kd %>%
+  mutate( abs_kd_diff = abs( kd - 1/kd) )
+```
+```{r}
+require(ggplot2)
+require(ggthemes)
+
+# oddball
+ggplot(
+  data = matches_team_score_kd %>% filter( game_variant == "Oddball") ,
+  aes( x=abs_kd_diff, y=abs_score_diff)) +
+  geom_point(, alpha = .1) +
+  geom_smooth(method = "gam", formula = y ~ s(x) , se = F) +
+  theme_classic() + 
+  labs( x = "Absolute KD difference between two teams", y = "Absolute final score difference : Oddball")
+```
+```{r}
+# Strongholds
+ggplot(
+  data = matches_team_score_kd %>% filter( game_variant == "Strongholds") ,
+  aes( x=abs_kd_diff, y=abs_score_diff)) +
+  geom_point(, alpha = .1) +
+  geom_smooth(method = "gam", formula = y ~ s(x) , se = F) +
+  theme_classic() +
+  labs( x = "Absolute KD difference between two teams", y = "Absolute final score difference : Strongholds")
+```
+```{r}
+# CTF
+ggplot(
+  data = matches_team_score_kd %>% filter( game_variant == "Capture the Flag") ,
+  aes( x=abs_kd_diff, y=factor(abs_score_diff))) +
+  geom_boxplot() +
+  theme_classic() + 
+  labs( x = "Absolute KD difference between two teams", y = "Absolute final score difference : CTF")
+```
+OR
+```{r}
+require(ggridges)
+
+# CTF
+ggplot(
+  data = matches_team_score_kd %>% filter( game_variant == "Capture the Flag")) +
+  geom_density_ridges(aes( x = abs_kd_diff, y = factor(abs_score_diff), fill= factor(abs_score_diff))) +
+  labs( x = "Absolute KD difference between two teams", y = "Absolute final score difference : CTF", fill = "")
+```
+
+```{r}
+# KOTH - this had some leftover cases when game was ended early at a draw, so it created an extra useless ridge row, so i filtered them out
+
+ggplot(
+  data = matches_team_score_kd %>% filter( game_variant == "King of the Hill" & abs_score_diff > 0)) +
+  geom_density_ridges(aes( x = abs_kd_diff, y = factor(abs_score_diff), fill= factor(abs_score_diff))) +
+  labs( x = "Absolute KD difference between two teams", y = "Absolute final score difference : KOTH", fill = "")
+```

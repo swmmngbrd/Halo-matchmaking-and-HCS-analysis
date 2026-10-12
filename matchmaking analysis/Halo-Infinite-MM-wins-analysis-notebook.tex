@@ -1,0 +1,731 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={R Notebook},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{R Notebook}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+The purpose of this analysis was originally to fins out what final
+performance metrics predict wins more than others, what match stats move
+the needle the most. I understand the underlying mechanisms of
+generating those stats are much more iluminating for the purpose of
+acquiring wins, but for that kind of analysis in-match event logs would
+be required, which unfortunately is not available in Halo Infinite (not
+at scale any way, I've seen projects to generate heatmap data for a
+single match, but scaling this to gather a large sample is outside my
+competence, for now at least). This analysis gathers finals match data
+from Ranked Arena matchmaking, analysis of HCS matches is done in a
+seprate notebook.
+
+For analysis, I have focused on team performance, for two reasons.
+Firstly, the matchmaking stats are retrieved via the Halo Infinite API,
+which technically accesses the match record via a single
+player/gamertag, that is it retrieves the numbers for gamertag
+``accessing'' the API, so for a single retriaval no stats for other
+individual players are available. The workaround would be to access the
+match\_id records from ``perspective'' of each player in the lobby and
+then join individual performances, this will likely be done in the
+future, since I wish to analyse how much good or poor performance of
+team mates affects individual stats. Alas, for now the data required is
+not available. Secondly, analysing strictly at the aggregate team level
+is sufficient if we assume that individual peformances are strictly
+upstream, that is there are no edges from individual performance stats
+to win-nerating processes downstream from team performance.
+
+{[}PUT DAG ILLUSTRATION HERE{]}
+
+Naturally, testing if this DAG structure actually holds up would be the
+next step of analysis. I will come back to this once this individual
+performance data is retrieved. But for now for the strict objective of
+analysing which performance metrics predict wins best, I assume this
+much simpler DAG structure which allows to aggregate at the team level
+and move on.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{require}\NormalTok{(tidyverse)}
+\NormalTok{filter }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\NormalTok{filter}
+
+\CommentTok{\# generating main data frame}
+
+\CommentTok{\# get list of files in dir}
+\NormalTok{files }\OtherTok{\textless{}{-}} \FunctionTok{list.files}\NormalTok{(}
+  \AttributeTok{pattern =} \StringTok{"Halo Query"}\NormalTok{,}
+  \AttributeTok{full.names =} \ConstantTok{TRUE}
+\NormalTok{  )}
+
+\CommentTok{\# match records are from perspective of different players, so must generate aggregate df with team stats and outcomes and match info}
+\CommentTok{\# import all csv\textquotesingle{}s in dir to a single list of dataframes, assign names}
+\NormalTok{dfs\_all\_list }\OtherTok{\textless{}{-}} \FunctionTok{lapply}\NormalTok{(files, read.csv)}
+\FunctionTok{names}\NormalTok{(dfs\_all\_list) }\OtherTok{\textless{}{-}}\NormalTok{ tools}\SpecialCharTok{::}\FunctionTok{file\_path\_sans\_ext}\NormalTok{(}\FunctionTok{basename}\NormalTok{(files))}
+
+\CommentTok{\# reassign column names to individual dataframes in dfs because column names in original csv\textquotesingle{}s are weird}
+\CommentTok{\# proper\_col\_names variable is manually generated from csv with proper column names (some match csv\textquotesingle{}s had poorly formatted columns, so I manually checked for csv with proper column names)}
+\CommentTok{\# then i wrote them into a txt than can be read manually}
+\NormalTok{proper\_col\_names }\OtherTok{\textless{}{-}} \FunctionTok{readLines}\NormalTok{(}\StringTok{"proper\_col\_names.txt"}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(dfs\_all\_list))) \{}\FunctionTok{names}\NormalTok{(dfs\_all\_list[[i]]) }\OtherTok{\textless{}{-}}\NormalTok{ proper\_col\_names\}}
+     
+\CommentTok{\# generate a single ANCESTOR dataframe by combining rows}
+\NormalTok{df\_all\_matches }\OtherTok{\textless{}{-}} \FunctionTok{bind\_rows}\NormalTok{(dfs\_all\_list)}
+
+\CommentTok{\# remove match duplicates and generate new main working df}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}} \FunctionTok{distinct}\NormalTok{(df\_all\_matches,}\StringTok{\textasciigrave{}}\AttributeTok{MATCH ID}\StringTok{\textasciigrave{}}\NormalTok{,}\AttributeTok{.keep\_all =}\NormalTok{ T)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# cleaning up df\_wip {-} main objective for meaningful analysis was dealing with mathes that end early due to players leaving prematurely. For example, when a player lags out a team that was ahead in score, the respective team gets a loss even though ingame performance would have predicted otherwise, so this case is pathologic to performance predicting outcomes, so in this specific case it makes sense to impute such match records. since the match data doesn\textquotesingle{}t carry any info actual lagouts, then we are left with attempting to infer when a match fits as a candidate for when final match outcome was affected by lagouts or similar factors( e.g. players idling). Thus, I filter out matches when ingame score and official outcome disagree, when match duration is too short and max score condition is unsatisfied, etc. These filter outs are game type specific since they have different time and scoring structures.}
+
+\CommentTok{\# also, I filtered out matches where in game performance, specifically kills/deaths were clear outlier, again based on own game understanding. From own extensive experience, anything above 2.0 (to be sure, conservatively 3.0) or below 0.5 (or 0.33) is a clear sign of an uncompetitive match, when one team is essentially not trying. Now, these are chosen as candidates for imputation, since the objective of analysis is determining which performance stats best predict outcomes in competitive matches, when we assume participants actively try to win.}
+
+\CommentTok{\# generate duration columns, relocate}
+\FunctionTok{require}\NormalTok{(lubridate)}
+\FunctionTok{require}\NormalTok{(hms)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: hms
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'hms'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:lubridate':
+## 
+##     hms
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{duration\_hms =} \FunctionTok{as\_hms}\NormalTok{(}
+      \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{sub}\NormalTok{(}\StringTok{":.*"}\NormalTok{, }\StringTok{""}\NormalTok{, DURATION)) }\SpecialCharTok{*} \DecValTok{60} \SpecialCharTok{+}
+        \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{sub}\NormalTok{(}\StringTok{".*:"}\NormalTok{, }\StringTok{""}\NormalTok{, DURATION))}
+\NormalTok{    )}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \StringTok{"duration\_in\_secs"} \OtherTok{=} \FunctionTok{as.duration}\NormalTok{(duration\_hms) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{as.numeric}\NormalTok{(),}
+    \StringTok{"duration\_in\_mins"} \OtherTok{=} \FunctionTok{as.duration}\NormalTok{(duration\_hms) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{as.numeric}\NormalTok{(}\AttributeTok{units=}\StringTok{"mins"}\NormalTok{),}
+    \StringTok{"duration\_drtn"} \OtherTok{=} \FunctionTok{as.duration}\NormalTok{(duration\_hms)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{relocate}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"duration\_hms"}\NormalTok{,}\StringTok{"duration\_drtn"}\NormalTok{,}\StringTok{"duration\_in\_secs"}\NormalTok{,}\StringTok{"duration\_in\_mins"}\NormalTok{),}
+           \AttributeTok{.after=}\NormalTok{DURATION)}
+
+\CommentTok{\# filter for Ranked Arena game types}
+\NormalTok{game\_variant }\OtherTok{=} \FunctionTok{list}\NormalTok{(}
+  \StringTok{"Ranked:CTF 3 Captures"}\NormalTok{, }\StringTok{"Ranked:CTF 5 Captures"}\NormalTok{, }\StringTok{"Ranked:King of the Hill"}\NormalTok{,}
+  \StringTok{"Ranked:Oddball"}\NormalTok{,}\StringTok{"Ranked:Slayer"}\NormalTok{,}\StringTok{"Ranked:Strongholds"}\NormalTok{)}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT}\StringTok{\textasciigrave{}} \SpecialCharTok{\%in\%}\NormalTok{ game\_variant)}
+
+\CommentTok{\# manually defining gamemode specific max score thresholds}
+\NormalTok{game\_variant\_max\_score }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\DecValTok{3}\NormalTok{,}\DecValTok{5}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{200}\NormalTok{,}\DecValTok{50}\NormalTok{,}\DecValTok{250}\NormalTok{)}
+\FunctionTok{names}\NormalTok{(game\_variant\_max\_score) }\OtherTok{\textless{}{-}}\NormalTok{ game\_variant}
+
+\CommentTok{\# generate outcome\_score\_based def. as outcome suggested by final team scores}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{outcome\_score\_based =} \FunctionTok{case\_when}\NormalTok{(}
+    \StringTok{\textasciigrave{}}\AttributeTok{SCORES: PLAYER TEAM}\StringTok{\textasciigrave{}} \SpecialCharTok{\textless{}} \StringTok{\textasciigrave{}}\AttributeTok{SCORES: ENEMY TEAM}\StringTok{\textasciigrave{}} \SpecialCharTok{\textasciitilde{}} \StringTok{"Loss"}\NormalTok{, }\AttributeTok{.default =} \StringTok{"Win"}
+\NormalTok{  ))}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{relocate}\NormalTok{(outcome\_score\_based,}\AttributeTok{.after=}\NormalTok{OUTCOME)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{outcome\_mismatch =} \SpecialCharTok{!}\NormalTok{(OUTCOME}\SpecialCharTok{==}\NormalTok{outcome\_score\_based)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{relocate}\NormalTok{(outcome\_mismatch, }\AttributeTok{.after=}\NormalTok{outcome\_score\_based)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{score\_game\_variant\_max =}\NormalTok{ game\_variant\_max\_score[}\StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT}\StringTok{\textasciigrave{}}\NormalTok{],}
+    \AttributeTok{score\_not\_max =} \FunctionTok{pmax}\NormalTok{(}
+      \StringTok{\textasciigrave{}}\AttributeTok{SCORES: PLAYER TEAM}\StringTok{\textasciigrave{}}\NormalTok{,}\StringTok{\textasciigrave{}}\AttributeTok{SCORES: ENEMY TEAM}\StringTok{\textasciigrave{}}\NormalTok{) }\SpecialCharTok{\textless{}}\NormalTok{ score\_game\_variant\_max,}
+\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{relocate}\NormalTok{(}\FunctionTok{c}\NormalTok{(score\_game\_variant\_max, score\_not\_max), }\AttributeTok{.after=}\StringTok{\textasciigrave{}}\AttributeTok{SCORES: ENEMY TEAM}\StringTok{\textasciigrave{}}\NormalTok{)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}
+  \AttributeTok{did\_not\_finish\_match\_candidate =} \FunctionTok{case\_when}\NormalTok{(}
+    \StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT CATEGORY}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \StringTok{"Slayer"} \SpecialCharTok{\&}\NormalTok{ score\_not\_max }\SpecialCharTok{\textasciitilde{}}\NormalTok{ T,}
+    \StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT CATEGORY}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \StringTok{"Strongholds"} \SpecialCharTok{\&}\NormalTok{ score\_not\_max }\SpecialCharTok{\textasciitilde{}}\NormalTok{ T,}
+    \StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT CATEGORY}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \StringTok{"Capture the Flag"} \SpecialCharTok{\&}\NormalTok{ outcome\_mismatch }\SpecialCharTok{\textasciitilde{}}\NormalTok{ T,}
+    \StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT CATEGORY}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \StringTok{"Oddball"} \SpecialCharTok{\&}\NormalTok{ score\_not\_max }\SpecialCharTok{\&} 
+\NormalTok{      (outcome\_mismatch }\SpecialCharTok{==}\NormalTok{ T }\SpecialCharTok{|}\NormalTok{ (duration\_in\_mins }\SpecialCharTok{\textless{}} \DecValTok{6}\NormalTok{)) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ T,}
+    \StringTok{\textasciigrave{}}\AttributeTok{GAME VARIANT CATEGORY}\StringTok{\textasciigrave{}} \SpecialCharTok{==} \StringTok{"King of The Hill"} \SpecialCharTok{\&}\NormalTok{ score\_not\_max }\SpecialCharTok{\&}
+\NormalTok{      (outcome\_mismatch }\SpecialCharTok{==}\NormalTok{ T }\SpecialCharTok{|}\NormalTok{ (duration\_in\_mins }\SpecialCharTok{\textless{}} \DecValTok{6}\NormalTok{)) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ T,}
+    \AttributeTok{.default =}\NormalTok{ F}
+\NormalTok{  )}
+\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{relocate}\NormalTok{(did\_not\_finish\_match\_candidate, }\AttributeTok{.after=}\NormalTok{OUTCOME)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{did\_not\_finish\_match\_candidate)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter\_out}\NormalTok{(}\FunctionTok{pmax}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{TEAM STATS: KILLS: COUNT}\StringTok{\textasciigrave{}}\NormalTok{,}\StringTok{\textasciigrave{}}\AttributeTok{TEAM STATS: DEATHS: COUNT}\StringTok{\textasciigrave{}}\NormalTok{) }\SpecialCharTok{\textless{}}\DecValTok{12}\NormalTok{)}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter\_out}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{TEAM STATS: KD}\StringTok{\textasciigrave{}} \SpecialCharTok{\textless{}}\NormalTok{ .}\DecValTok{5}\NormalTok{)}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter\_out}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{TEAM STATS: KD}\StringTok{\textasciigrave{}} \SpecialCharTok{\textgreater{}} \DecValTok{2}\NormalTok{)}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(PLAYLIST }\SpecialCharTok{==} \StringTok{"Ranked Arena"}\NormalTok{)}
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\FunctionTok{grepl}\NormalTok{(}\StringTok{\textquotesingle{}Ranked\textquotesingle{}}\NormalTok{,MAP))}
+
+\NormalTok{df\_wip }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{contains}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"PLAYER"}\NormalTok{, }\StringTok{"CSR"}\NormalTok{, }\StringTok{"GAMERTAG"}\NormalTok{, }\StringTok{"SKILL"}\NormalTok{, }\StringTok{"COUNTERFACTUALS"}\NormalTok{)))}
+
+\NormalTok{df\_main }\OtherTok{\textless{}{-}}\NormalTok{ df\_wip }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{c}\NormalTok{(}\StringTok{"score\_not\_max"}\NormalTok{,}\StringTok{"score\_game\_variant\_max"}\NormalTok{,}\StringTok{"did\_not\_finish\_match\_candidate"}\NormalTok{))}
+
+\NormalTok{df\_main }\OtherTok{\textless{}{-}}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \StringTok{"OUTCOME binary"} \OtherTok{=} \FunctionTok{as.numeric}\NormalTok{((OUTCOME }\SpecialCharTok{==} \StringTok{"Win"}\NormalTok{)),}
+    \AttributeTok{.after =}\NormalTok{ OUTCOME}
+\NormalTok{  )}
+
+\FunctionTok{names}\NormalTok{(df\_main) }\OtherTok{\textless{}{-}} \FunctionTok{make.names}\NormalTok{(}\FunctionTok{names}\NormalTok{(df\_main))}
+
+\FunctionTok{rm}\NormalTok{(df\_all\_matches)}
+\FunctionTok{rm}\NormalTok{(dfs\_all\_list)}
+\end{Highlighting}
+\end{Shaded}
+
+First question is how much do kills matter for wins? Formulated more
+rigoruosly its - how well does size of team kill/death difference
+predict win outcome? Now, obviously in Slayer team kill/death
+\textgreater{} 0 predicts a win with p=1 and kill/death \textless{} 0
+predicts a win with p=0, so for now, let's drop slayer from analysis and
+focus on how much kills matter in objective game types.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{require}\NormalTok{(mgcv)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: mgcv
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: nlme
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'nlme'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:dplyr':
+## 
+##     collapse
+\end{verbatim}
+
+\begin{verbatim}
+## This is mgcv 1.9-4. For overview type '?mgcv'.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{binomial\_fit\_kd\_simple }\OtherTok{\textless{}{-}} \FunctionTok{gam}\NormalTok{(}
+\NormalTok{  OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..KD, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(binomial\_fit\_kd\_simple)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr")
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)  
+## (Intercept) -0.10124    0.04855  -2.085    0.037 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Approximate significance of smooth terms:
+##                     edf Ref.df Chi.sq p-value    
+## s(TEAM.STATS..KD) 4.774  5.649   4026  <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =  0.537   Deviance explained = 47.7%
+## UBRE = -0.27398  Scale est. = 1         n = 16089
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{binomial\_fit\_kd\_assists }\OtherTok{\textless{}{-}} \FunctionTok{gam}\NormalTok{(}
+\NormalTok{  OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..KD, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(TEAM.STATS..ASSISTS..PER.MIN., }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(binomial\_fit\_kd\_assists)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr") + s(TEAM.STATS..ASSISTS..PER.MIN., 
+##     bs = "cr")
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)  
+## (Intercept) -0.10097    0.04853   -2.08   0.0375 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Approximate significance of smooth terms:
+##                                    edf Ref.df   Chi.sq p-value    
+## s(TEAM.STATS..KD)                4.774  5.649 3592.938  <2e-16 ***
+## s(TEAM.STATS..ASSISTS..PER.MIN.) 1.244  1.454    0.289   0.854    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =  0.537   Deviance explained = 47.7%
+## UBRE = -0.27386  Scale est. = 1         n = 16089
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{anova.gam}\NormalTok{(binomial\_fit\_kd\_assists, binomial\_fit\_kd\_simple)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Analysis of Deviance Table
+## 
+## Model 1: OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr") + s(TEAM.STATS..ASSISTS..PER.MIN., 
+##     bs = "cr")
+## Model 2: OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr")
+##   Resid. Df Resid. Dev      Df Deviance Pr(>Chi)
+## 1     16081      11669                          
+## 2     16082      11669 -1.4538 -0.62549   0.5862
+\end{verbatim}
+
+Interestingly, adding team assists per min (which would be one of the
+first metrics to come mind as a metric of team work efficiency) to
+specification is not significant under the chi sq difference in deviance
+test, i.e.~assist frequency does not predict outcome better enough over
+noise, at least once we ``condition'' on KD.
+
+Now to add another robust (from own understanding of the game) metric
+for team efficiency - difference in damage dealt per min and damage
+taken per min. Canonically, this is certainly the second most referenced
+metric in individual performance behind KD.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_main }\OtherTok{\textless{}{-}}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}
+  \AttributeTok{team.damage.dealt.taken.diff =}\NormalTok{ TEAM.STATS..DAMAGE.DEALT..PER.MIN. }\SpecialCharTok{{-}}\NormalTok{ TEAM.STATS..DAMAGE.TAKEN..PER.MIN.,}
+  \AttributeTok{.after =}\NormalTok{ TEAM.STATS..DAMAGE.TAKEN..PER.MIN.}
+\NormalTok{)}
+\NormalTok{binomial\_fit\_kd\_assists\_damagediff }\OtherTok{\textless{}{-}} \FunctionTok{gam}\NormalTok{(}
+\NormalTok{  OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..KD, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(TEAM.STATS..ASSISTS..PER.MIN., }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(team.damage.dealt.taken.diff, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(binomial\_fit\_kd\_assists\_damagediff)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr") + s(TEAM.STATS..ASSISTS..PER.MIN., 
+##     bs = "cr") + s(team.damage.dealt.taken.diff, bs = "cr")
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)  
+## (Intercept) -0.10214    0.04843  -2.109   0.0349 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Approximate significance of smooth terms:
+##                                    edf Ref.df   Chi.sq p-value    
+## s(TEAM.STATS..KD)                4.713  5.589 1548.422  <2e-16 ***
+## s(TEAM.STATS..ASSISTS..PER.MIN.) 1.282  1.519    0.539   0.762    
+## s(team.damage.dealt.taken.diff)  1.004  1.008   29.839  <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =  0.538   Deviance explained = 47.8%
+## UBRE = -0.27557  Scale est. = 1         n = 16089
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{anova.gam}\NormalTok{(binomial\_fit\_kd\_assists\_damagediff,binomial\_fit\_kd\_assists)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Analysis of Deviance Table
+## 
+## Model 1: OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr") + s(TEAM.STATS..ASSISTS..PER.MIN., 
+##     bs = "cr") + s(team.damage.dealt.taken.diff, bs = "cr")
+## Model 2: OUTCOME.binary ~ s(TEAM.STATS..KD, bs = "cr") + s(TEAM.STATS..ASSISTS..PER.MIN., 
+##     bs = "cr")
+##   Resid. Df Resid. Dev      Df Deviance  Pr(>Chi)    
+## 1     16080      11639                               
+## 2     16081      11669 -1.0132  -29.452 5.913e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+From both test, it's clear ``damage value added'' is a significant
+predictor of positive outcomes, even with conditioning on KD. Now to
+check, the practical significance of damage value added:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(binomial\_fit\_kd\_assists\_damagediff, }\AttributeTok{pages=}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Halo-Infinite-MM-wins-analysis-notebook_files/Halo-Infinite-MM-wins-analysis-notebook_files/figure-latex/unnamed-chunk-10-1.pdf}}
+Interestingly, as the analysis of deviance suggested it clear from the
+plot, assists smoother is not statistically different from zero at any
+value.
+
+The functional values of damage smoother (3rd plot) are much more modest
+than KD smoother at same respective quantile values. On the positive
+side, it is clear a significant team damage advantage matters for win
+probability, however it is also clear that potential advantage is
+significantly exceed by the negative effect of KD \textless{} 1. It begs
+the question of the distribution of KD wrt damage value added.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{require}\NormalTok{(ggthemes)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: ggthemes
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ team.damage.dealt.taken.diff, }\AttributeTok{y =}\NormalTok{ TEAM.STATS..KD), }\AttributeTok{alpha =}\NormalTok{ .}\DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{annotate}\NormalTok{(}
+    \StringTok{"text"}\NormalTok{,}
+    \AttributeTok{x =} \ConstantTok{Inf}\NormalTok{,}
+    \AttributeTok{y=}\ConstantTok{Inf}\NormalTok{,}
+    \AttributeTok{label =} \FunctionTok{paste0}\NormalTok{(}
+      \FunctionTok{cor}\NormalTok{(df\_main}\SpecialCharTok{$}\NormalTok{team.damage.dealt.taken.diff,df\_main}\SpecialCharTok{$}\NormalTok{TEAM.STATS..KD) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{signif}\NormalTok{(}\DecValTok{2}\NormalTok{)),}
+    \AttributeTok{hjust =} \DecValTok{20}\NormalTok{,}
+    \AttributeTok{vjust =}\DecValTok{8}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Halo-Infinite-MM-wins-analysis-notebook_files/Halo-Infinite-MM-wins-analysis-notebook_files/figure-latex/unnamed-chunk-11-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{require}\NormalTok{(ggthemes)}
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(TEAM.STATS..KD }\SpecialCharTok{\textgreater{}}\NormalTok{ .}\DecValTok{9} \SpecialCharTok{\&}\NormalTok{ TEAM.STATS..KD }\SpecialCharTok{\textless{}} \DecValTok{1} \SpecialCharTok{/}\NormalTok{ .}\DecValTok{9}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ team.damage.dealt.taken.diff, }\AttributeTok{y =}\NormalTok{ TEAM.STATS..KD), }\AttributeTok{alpha =}\NormalTok{ .}\DecValTok{15}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Halo-Infinite-MM-wins-analysis-notebook_files/Halo-Infinite-MM-wins-analysis-notebook_files/figure-latex/unnamed-chunk-12-1.pdf}}
+Strongly, positively correlated, yet there is enough variation in damage
+diff at a given value of KD, especially around 1.0. We fit a gam with
+interaction between KD and damage diff and see if benefit from higher
+damage diff when KD is around 1.0 is even practically significant.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{binomial\_fit\_kd\_damagediff\_interaction }\OtherTok{\textless{}{-}} \FunctionTok{gam}\NormalTok{(}
+\NormalTok{  OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..KD, team.damage.dealt.taken.diff),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(binomial\_fit\_kd\_damagediff\_interaction)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..KD, team.damage.dealt.taken.diff)
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)   
+## (Intercept)  0.11118    0.03551   3.131  0.00174 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Approximate significance of smooth terms:
+##                                                  edf Ref.df Chi.sq p-value    
+## s(TEAM.STATS..KD,team.damage.dealt.taken.diff) 6.818   8.87   3904  <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =  0.538   Deviance explained = 47.7%
+## UBRE = -0.27351  Scale est. = 1         n = 16089
+\end{verbatim}
+
+We do visualize:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{require}\NormalTok{(lattice)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: lattice
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_main\_no\_slayer }\OtherTok{\textless{}{-}}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{grid }\OtherTok{\textless{}{-}} \FunctionTok{expand.grid}\NormalTok{(}
+  \AttributeTok{team.damage.dealt.taken.diff =} \FunctionTok{seq}\NormalTok{(}\FunctionTok{min}\NormalTok{(df\_main\_no\_slayer}\SpecialCharTok{$}\NormalTok{team.damage.dealt.taken.diff),}\FunctionTok{max}\NormalTok{(df\_main\_no\_slayer}\SpecialCharTok{$}\NormalTok{team.damage.dealt.taken.diff),}\AttributeTok{length.out =} \DecValTok{100}\NormalTok{),}
+  \AttributeTok{TEAM.STATS..KD =} \FunctionTok{seq}\NormalTok{(}\FunctionTok{min}\NormalTok{(df\_main\_no\_slayer}\SpecialCharTok{$}\NormalTok{TEAM.STATS..KD),}\FunctionTok{max}\NormalTok{(df\_main\_no\_slayer}\SpecialCharTok{$}\NormalTok{TEAM.STATS..KD),}\AttributeTok{length.out =} \DecValTok{100}\NormalTok{)}
+\NormalTok{)}
+\NormalTok{grid}\SpecialCharTok{$}\NormalTok{smoother\_hat }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(binomial\_fit\_kd\_damagediff\_interaction, }\AttributeTok{newdata=}\NormalTok{grid)}
+
+\FunctionTok{wireframe}\NormalTok{(}
+\NormalTok{  smoother\_hat }\SpecialCharTok{\textasciitilde{}}\NormalTok{ team.damage.dealt.taken.diff }\SpecialCharTok{*}\NormalTok{ TEAM.STATS..KD,}
+  \AttributeTok{data =}\NormalTok{ grid,}
+  \AttributeTok{drape =}\NormalTok{ T,}
+  \AttributeTok{xlab =} \StringTok{"Damage diff"}\NormalTok{,}
+  \AttributeTok{ylab =} \StringTok{"KD"}\NormalTok{,}
+  \AttributeTok{zlab =} \StringTok{"smoother prediction"}\NormalTok{,}
+  \AttributeTok{screen =} \FunctionTok{list}\NormalTok{(}\AttributeTok{z =} \SpecialCharTok{{-}}\DecValTok{40}\NormalTok{, }\AttributeTok{x =} \SpecialCharTok{{-}}\DecValTok{60}\NormalTok{),}
+  \AttributeTok{scales =} \FunctionTok{list}\NormalTok{(}
+    \AttributeTok{arrows =}\NormalTok{ F}
+\NormalTok{  )}
+  
+\NormalTok{)  }
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics[width=1\linewidth]{Halo-Infinite-MM-wins-analysis-notebook_files/figure-latex/unnamed-chunk-14-1}
+
+Now, to come back to Slayer game type and analyse, how well secondary
+performance metrics predict a team kill/death differential.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df\_main }\OtherTok{\textless{}{-}}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{team.stats..accuracy.as.numeric =} \FunctionTok{gsub}\NormalTok{(}
+      \AttributeTok{pattern =} \StringTok{"\%"}\NormalTok{,}
+      \AttributeTok{replacement =} \StringTok{""}\NormalTok{,}
+\NormalTok{      TEAM.STATS..ACCURACY)}\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ as.numeric }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{sapply}\NormalTok{(}\ControlFlowTok{function}\NormalTok{(a)\{a}\SpecialCharTok{/}\DecValTok{100}\NormalTok{\}),}
+    \AttributeTok{.after =}\NormalTok{ TEAM.STATS..ACCURACY}
+\NormalTok{    )}
+\NormalTok{binomial\_fit\_slayer\_large\_spec }\OtherTok{\textless{}{-}} \FunctionTok{gam}\NormalTok{(}
+\NormalTok{  OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..ASSISTS..PER.MIN., }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(team.damage.dealt.taken.diff, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(team.stats..accuracy.as.numeric, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(TEAM.STATS..CALLOUT.ASSISTS, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(binomial\_fit\_slayer\_large\_spec)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..ASSISTS..PER.MIN., bs = "cr") + 
+##     s(team.damage.dealt.taken.diff, bs = "cr") + s(team.stats..accuracy.as.numeric, 
+##     bs = "cr") + s(TEAM.STATS..CALLOUT.ASSISTS, bs = "cr")
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)
+## (Intercept)  -0.3586     0.2237  -1.603    0.109
+## 
+## Approximate significance of smooth terms:
+##                                      edf Ref.df Chi.sq p-value    
+## s(TEAM.STATS..ASSISTS..PER.MIN.)   1.003  1.006 164.59 < 2e-16 ***
+## s(team.damage.dealt.taken.diff)    6.105  7.176 840.22 < 2e-16 ***
+## s(team.stats..accuracy.as.numeric) 2.653  3.398  14.23 0.00486 ** 
+## s(TEAM.STATS..CALLOUT.ASSISTS)     1.920  2.434  13.44 0.00320 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =   0.61   Deviance explained = 56.2%
+## UBRE = -0.38691  Scale est. = 1         n = 4262
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(}
+  \FunctionTok{gam}\NormalTok{(}
+\NormalTok{    OUTCOME.binary }\SpecialCharTok{\textasciitilde{}} \FunctionTok{s}\NormalTok{(TEAM.STATS..ASSISTS..PER.MIN., }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(team.damage.dealt.taken.diff, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(team.stats..accuracy.as.numeric, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{s}\NormalTok{(TEAM.STATS..CALLOUT.ASSISTS, }\AttributeTok{bs=}\StringTok{"cr"}\NormalTok{),}
+  \AttributeTok{family =} \StringTok{"binomial"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ df\_main }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{GAME.VARIANT.CATEGORY }\SpecialCharTok{==} \StringTok{"Slayer"}\NormalTok{)}
+\NormalTok{)}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Family: binomial 
+## Link function: logit 
+## 
+## Formula:
+## OUTCOME.binary ~ s(TEAM.STATS..ASSISTS..PER.MIN., bs = "cr") + 
+##     s(team.damage.dealt.taken.diff, bs = "cr") + s(team.stats..accuracy.as.numeric, 
+##     bs = "cr") + s(TEAM.STATS..CALLOUT.ASSISTS, bs = "cr")
+## 
+## Parametric coefficients:
+##             Estimate Std. Error z value Pr(>|z|)   
+## (Intercept) -0.07077    0.02180  -3.246  0.00117 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Approximate significance of smooth terms:
+##                                      edf Ref.df  Chi.sq p-value    
+## s(TEAM.STATS..ASSISTS..PER.MIN.)   2.854  3.642  113.06  <2e-16 ***
+## s(team.damage.dealt.taken.diff)    1.002  1.003 3305.87  <2e-16 ***
+## s(team.stats..accuracy.as.numeric) 6.923  8.065   19.20   0.013 *  
+## s(TEAM.STATS..CALLOUT.ASSISTS)     5.328  6.306   10.58   0.113    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## R-sq.(adj) =  0.447   Deviance explained = 38.6%
+## UBRE = -0.14738  Scale est. = 1         n = 16089
+\end{verbatim}
+
+\end{document}
